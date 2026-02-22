@@ -35,6 +35,11 @@ This file is intentionally short so AI can load it quickly each session.
 - All user-facing info/error text must use localization via `self:L()`.
 - Keep release/user messaging concise and readable.
 
+## Edit Mode
+- All edit mode code belongs in the `EditMode/` folder.
+- No edit mode logic should live in other modules, settings, or ZenFrames.lua.
+- There may be rare exceptions we can discuss on a case by case basis.
+
 ## Code Style Essentials
 - Favor self-documenting code and descriptive names.
 - Keep comments minimal (only major section headers or required file headers).
@@ -45,7 +50,10 @@ To prepare for a release:
 - Bump addon version in the `.toc` file:
   - Increase minor version for normal changes.
   - Increase major version for major/breaking changes.
-- Read SAdCore docs and create the one-time release-notes section shown to players after update.
-- Add a very brief overview of release changes (chat window space is limited).
-- Check for unused localization strings and remove them
-- Verifiy all new localization strings are in place and have translations for the existing languages already translated for other strings
+  - Read SAdCore docs and create the one-time release-notes section shown to players after update.
+  - Add a very brief overview of release changes (chat window space is limited).
+      - Do not add notes that can be inferred. If we updated target unit frame for example, it's inferred we also updated the target config and other settings to match
+      - In general there should never be more than 2 items for release notes
+      - If the user wants more information on the exact release notes they will visit the repository page
+  - Check for unused localization strings and remove them
+  - Verifiy all new localization strings are in place and have translations for the existing languages already translated for other strings
