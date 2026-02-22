@@ -5,13 +5,15 @@ param(
 # Array of World of Warcraft base folders to deploy to
 $WoWBaseFolders = @(
     "C:\Program Files (x86)\World of Warcraft\_beta_",
-	"C:\Program Files (x86)\World of Warcraft\_ptr_"
+    "C:\Program Files (x86)\World of Warcraft\_ptr_",
+    "C:\Program Files (x86)\World of Warcraft\_retail_"
 )
 
 # Array of files/folders to clean up after deployment
 $CleanupItems = @(
     ".vscode",
     ".gitignore",
+    ".release",
     ".dev",
     ".git"
 )
@@ -166,28 +168,32 @@ else {
             Remove-Item -Path $targetPath -Recurse -Force
         }
         
-        # Copy addon folder to target
-        Write-Host "  Copying files..."
-        Copy-Item -Path $ProjectRoot -Destination $targetPath -Recurse -Force
+        # Copy addon folder to target using robocopy with exclusions
+        Write-Host "  Copying files (excluding development files)..."
         
-        # Clean up development files from deployed copy (recursively)
-        Write-Host "  Cleaning up development files..."
+        # Prepare robocopy exclusion parameters
+        $excludeDirs = $CleanupItems | ForEach-Object { "/XD", $_ }
+        $excludeFiles = $CleanupItems | ForEach-Object { "/XF", $_ }
         
-        # Remove directories recursively
-        foreach ($item in $CleanupItems) {
-            # Find and remove all matching directories
-            $dirs = Get-ChildItem -Path $targetPath -Filter $item -Recurse -Force -Directory -ErrorAction SilentlyContinue
-            foreach ($dir in $dirs) {
-                Remove-Item -Path $dir.FullName -Recurse -Force
-                Write-Host "    Removed: $($dir.FullName.Replace($targetPath, '').TrimStart('\'))"
-            }
-            
-            # Find and remove all matching files
-            $files = Get-ChildItem -Path $targetPath -Filter $item -Recurse -Force -File -ErrorAction SilentlyContinue
-            foreach ($file in $files) {
-                Remove-Item -Path $file.FullName -Force
-                Write-Host "    Removed: $($file.FullName.Replace($targetPath, '').TrimStart('\'))"
-            }
+        # Build robocopy arguments
+        $robocopyArgs = @(
+            $ProjectRoot,
+            $targetPath,
+            "/MIR",          # Mirror directory (copy all subdirectories, including empty ones, and delete files in destination that don't exist in source)
+            "/NJH",          # No job header
+            "/NJS",          # No job summary
+            "/NDL",          # No directory list
+            "/NP"            # No progress
+        ) + $excludeDirs + $excludeFiles
+        
+        # Execute robocopy
+        $result = robocopy @robocopyArgs 2>&1
+        
+        # Robocopy exit codes: 0-7 are success, 8+ are errors
+        if ($LASTEXITCODE -ge 8) {
+            Write-Error "  Failed to copy files (robocopy exit code: $LASTEXITCODE)"
+            Write-Host $result
+            exit 1
         }
         
         Write-Host "  Deployment complete"
