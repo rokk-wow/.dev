@@ -47,3 +47,5 @@ To prepare for a release:
   - Increase major version for major/breaking changes.
 - Read SAdCore docs and create the one-time release-notes section shown to players after update.
 - Add a very brief overview of release changes (chat window space is limited).
+- Check for unused localization strings and remove them
+- Verifiy all new localization strings are in place and have translations for the existing languages already translated for other strings
